@@ -11,10 +11,10 @@ Node::Node(){
 }
 
 // For a given prop, set it up as the right type, initialize all variables, and pass the CAN object for communication
-void Node::initNode(uint8_t nodeID, CANtroller aCAN){
+void Node::initNode(uint8_t nodeID, CANnode aCAN){
 	_myID = nodeID;
 	_myCAN = &aCAN;
-  _status = NEVER_STATUS;		// No status ever sent
+	_errorStatus = 0;
 	_hasChanged = true;			// Have to handle it
 }
 
@@ -32,9 +32,9 @@ uint8_t Node::lastReg(uint8_t reg){
 bool Node::setRegister(uint8_t theReg, uint8_t thePayload){
 		bool acked = _myCAN->regWrite(_myID,theReg,thePayload,true);
 		if(acked){
-			if(_regs[theReg]!=theStatus)
+			if(_regs[theReg]!=thePayload)
 				_hasChanged = true;
-			_regs[theReg] = theStatus;
+			_regs[theReg] = thePayload;
 			_errorStatus = 0;
 			return true;
 		} else {
@@ -44,7 +44,7 @@ bool Node::setRegister(uint8_t theReg, uint8_t thePayload){
 }
 
 // Return whether there's been a change, clear the change flag either way
-bool Node:registerChange(void){
+bool Node::registerChange(void){
 	if(_hasChanged){
 		_hasChanged = false;
 		return true;
@@ -52,7 +52,7 @@ bool Node:registerChange(void){
 		return false;
 }
 
-uint8_t Node:updateReg(uint8_t reg){
+uint8_t Node::updateReg(uint8_t reg){
 	if((millis()-_lastCANtime)<ASK_TIME)
 		return _regs[reg];
 	else{
@@ -62,7 +62,7 @@ uint8_t Node:updateReg(uint8_t reg){
 	}
 }
 
-void Node:updateAllReg(void){
+void Node::updateAllReg(void){
 	if((millis()-_lastCANtime)<ASK_TIME)
 		return;
 	else{
@@ -72,29 +72,63 @@ void Node:updateAllReg(void){
 	}
 }
 
+bool Node::assignMult(uint8_t regMask, uint8_t data[]){
+    bool toRet = false;
+
+    for(uint8_t reg = 0; reg < 7; reg++)
+      if(bitRead(regMask,reg)){
+        if(_regs[reg] != data[reg])     // Something will change
+          toRet = true;
+        _regs[reg] = data[reg];
+      }
+
+    return toRet;
+}
+
+bool Node::assignOne(uint8_t reg, uint8_t value){
+	bool toRet = false;
+
+	if(_regs[reg] != value)     // Something will change
+		toRet = true;
+	_regs[reg] = value;
+
+	return toRet;
+}
+
+void Node::clearErrors(void){
+	_lastCANtime = millis();
+	_errorStatus = 0;
+}
+
+void Node::sndACK(uint8_t theReg, uint8_t thePayload){
+	_myCAN->sndACK(theReg,thePayload);			// Send as the master
+}
+
 ///////////////////////
 
 // Step through an array of props, find the one with matching id to the sender, and assign the message to the status correctly
 void assignMessage(Node p[], uint8_t numNodes, CANmsg msg, uint8_t data[], uint8_t len){
 	for(uint8_t i = 0; i < numNodes; i++){
 		if(p[i].isMe(msg.sndID)){
-			_lastCANtime = millis();			// Prop responding, so online, not in error
-			_errorStatus = 0;
+
+			p[i].clearErrors();
 			switch (msg.ackRW){
 				case W_ACK:
-					myCan->sndACK(msg.reg,msg.payload);
+					p[i].sndACK(msg.reg,msg.payload);
 				case W_NACK:
 				case ACK:
 					if(msg.reg == REG_MULT)
-						_myCan->assignMult(msg.payload,data);
+						p[i].assignMult(msg.payload,data);
 					else
-						_myCan->setReg(msg.reg,msg.payload);
+						p[i].assignOne(msg.reg,msg.payload);
 					break;
 			}
 			return;				// No need to step through the rest of the loop
 		}
 	}
 }
+
+
 
 /*
   END FILE

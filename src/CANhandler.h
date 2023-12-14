@@ -37,6 +37,18 @@ public:
     void updateAllReg(void);
     // Ask for the contents of all registers
 
+    bool assignMult(uint8_t regMask, uint8_t data[]);
+    // Put the data into local storage
+
+    bool assignOne(uint8_t reg, uint8_t value);
+    // Put the data into local storage
+
+    void clearErrors(void);
+    // Update _lastCANtime, zero _errorStatus
+
+    void sndACK(uint8_t theReg, uint8_t thePayload);
+    // Handler acknowledge
+
 private:
     CANnode* _myCAN;					      // CAN object of the MASTER for communication
     uint8_t _myID = 0xFF;			        // This prop's id
@@ -46,7 +58,7 @@ private:
     uint8_t _hasChanged = 0;			    // Whether a given register is updated
 };
 
-void assignMessage(Prop p[], uint8_t size, IDmsg msg, uint8_t data[], uint8_t len);
+void assignMessage(Node p[], uint8_t size, CANmsg msg, uint8_t data[], uint8_t len);
 // Take an incoming message, see which prop it was sent from, and assign the relevant information to that prop
 
 
