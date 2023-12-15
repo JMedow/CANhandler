@@ -13,10 +13,10 @@
 #define ASK_TIME 200
 #define NONRESPONSE_THRESHOLD 5
 
-class Node{
+class CANremote{
 public:
-    Node();
-    void initNode(uint8_t nodeID, CANnode aCAN);
+    CANremote();
+    void initRemote(uint8_t nodeID, CANnode aCAN);
     // Set up the prop according to its propDef, and pass the master's CAN object for communication
 
     bool isMe(uint8_t aID);
@@ -58,7 +58,7 @@ private:
     uint8_t _hasChanged = 0;			    // Whether a given register is updated
 };
 
-void assignMessage(Node p[], uint8_t size, CANmsg msg, uint8_t data[], uint8_t len);
+void assignMessage(CANremote p[], uint8_t size, CANmsg msg, uint8_t data[], uint8_t len);
 // Take an incoming message, see which prop it was sent from, and assign the relevant information to that prop
 
 
