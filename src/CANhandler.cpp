@@ -53,13 +53,12 @@ bool CANremote::registerChange(void){
 }
 
 uint8_t CANremote::updateReg(uint8_t reg){
-	if((millis()-_lastCANtime)<ASK_TIME)
-		return _regs[reg];
-	else{
+	if((millis()-_lastCANtime)>ASK_TIME){
 		_lastCANtime = millis();
 		_errorStatus++;
 		_myCAN->sendReadRequest(_myID,reg,false);
 	}
+	return _regs[reg];
 }
 
 void CANremote::updateAllReg(void){
