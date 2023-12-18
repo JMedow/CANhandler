@@ -43,6 +43,31 @@ bool CANremote::setRegister(uint8_t theReg, uint8_t thePayload){
 		}
 }
 
+bool CANremote::setMultReg(uint8_t theMask, uint8_t theData[]){
+		bool acked = _myCAN->regWriteMult(_myID,theMask,theData,true);
+		if(acked){
+			_hasChanged = assignMultLocal(theMask,theData);
+			_errorStatus = 0;
+			return true;
+		} else {
+			_errorStatus++;
+			return false;
+		}
+}
+
+bool CANremote::assignMultLocal(uint8_t regMask, uint8_t data[]){
+	bool toRet = false;
+
+	for(uint8_t reg = 0; reg < 7; reg++)
+		if(bitRead(regMask,reg)){
+			if(_regs[reg] != data[reg])     // Something will change
+				toRet = true;
+			_regs[reg] = data[reg];
+		}
+
+		return toRet;
+}
+
 // Return whether there's been a change, clear the change flag either way
 bool CANremote::registerChange(void){
 	if(_hasChanged){

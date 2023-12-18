@@ -28,6 +28,12 @@ public:
     bool setRegister(uint8_t theReg, uint8_t thePayload);
     // Sets a register to the payload, returns true if ACK'd
 
+    bool CANremote::setMultReg(uint8_t theMask, uint8_t theData[]);
+    // Sends a message to set multiple registers.  Returns true if ACK'd
+
+    bool CANremote::assignMultLocal(uint8_t regMask, uint8_t data[]);
+    // Place data in local registers, return if a change
+
     bool registerChange(void);
     // Returns whether there has been a change, clears the flag
 
