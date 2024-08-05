@@ -11,7 +11,7 @@ CANremote::CANremote(){
 }
 
 // For a given prop, set it up as the right type, initialize all variables, and pass the CAN object for communication
-void CANremote::initRemote(uint8_t nodeID, CANnode aCAN){
+void CANremote::initRemote(uint8_t nodeID, CANnode &aCAN){
 	_myID = nodeID;
 	_myCAN = &aCAN;
 	_errorStatus = 0;

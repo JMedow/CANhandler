@@ -16,7 +16,7 @@
 class CANremote{
 public:
     CANremote();
-    void initRemote(uint8_t nodeID, CANnode aCAN);
+    void initRemote(uint8_t nodeID, CANnode &aCAN);
     // Set up the prop according to its propDef, and pass the master's CAN object for communication
 
     bool isMe(uint8_t aID);
